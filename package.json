@@ -1,5 +1,5 @@
 {
-    "name": "node-red-contrib-servicenow-table-api-oauth",
+    "name": "node-red-contrib-servicenow-oauth-table-api",
     "version": "1.0.0",
     "description": "Node-RED nodes for ServiceNow Table API with OAuth 2.0 authentication. Provides CRUD operations (Create, Retrieve, Update, Delete) for ServiceNow tables using client credentials flow.",
     "main": "servicenow-table-API.js",
@@ -23,10 +23,10 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/siphion/node-red-contrib-servicenow-table-api-oauth.git"
+        "url": "git+https://github.com/siphion/node-red-contrib-servicenow-oauth-table-api.git"
     },
     "bugs": {
-        "url": "https://github.com/siphion/node-red-contrib-servicenow-table-api-oauth/issues"
+        "url": "https://github.com/siphion/node-red-contrib-servicenow-oauth-table-api/issues"
     },
-    "homepage": "https://github.com/siphion/node-red-contrib-servicenow-table-api-oauth#readme"
+    "homepage": "https://github.com/siphion/node-red-contrib-servicenow-oauth-table-api#readme"
 }

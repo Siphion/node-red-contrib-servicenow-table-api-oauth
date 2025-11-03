@@ -1,4 +1,4 @@
-node-red-contrib-servicenow-table-api-oauth
+node-red-contrib-servicenow-oauth-table-api
 ========================
 
 A [Node-RED](https://www.nodered.org/) node collection to interact with ServiceNow Table API using OAuth 2.0 authentication. [Table API doc](https://developer.servicenow.com/dev.do#!/reference/api/quebec/rest/c_TableAPI).
@@ -11,18 +11,18 @@ Install
 1. Open your Node-RED editor
 2. Click on the menu (top right) → Manage palette
 3. Go to the "Install" tab
-4. Search for `node-red-contrib-servicenow-table-api-oauth`
+4. Search for `node-red-contrib-servicenow-oauth-table-api`
 5. Click "Install"
 
 ### Option 2: Using npm
 
 Run command on Node-RED installation directory:
 
-	npm install node-red-contrib-servicenow-table-api-oauth
+	npm install node-red-contrib-servicenow-oauth-table-api
 
 or run command for global installation:
 
-	npm install -g node-red-contrib-servicenow-table-api-oauth
+	npm install -g node-red-contrib-servicenow-oauth-table-api
 
 After installation, restart Node-RED to load the new nodes.
 

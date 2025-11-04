@@ -697,7 +697,8 @@ module.exports = function(RED) {
         var node = this;
         var server = RED.nodes.getNode(config.server);
 
-        this.prepareRequest = function(attachmentSysId, callback) {
+        // Single attachment metadata retrieval
+        this.prepareRequestSingle = function(attachmentSysId, callback) {
             var options = {
                 baseUrl: server.instance,
                 uri: 'api/now/attachment/' + attachmentSysId,
@@ -711,14 +712,53 @@ module.exports = function(RED) {
             server.doRequest(options, callback);
         };
 
-        this.on('input', function(msg) {
-            var attachmentSysId = msg.sys_id || msg.topic;
+        // Multiple attachments metadata retrieval (query-based)
+        this.prepareRequestQuery = function(sysparmQuery, sysparmLimit, sysparmOffset, callback) {
+            var uri = 'api/now/attachment';
+            var queryParams = [];
 
-            if (!attachmentSysId) {
+            if (sysparmQuery) {
+                queryParams.push('sysparm_query=' + encodeURIComponent(sysparmQuery));
+            }
+            if (sysparmLimit) {
+                queryParams.push('sysparm_limit=' + encodeURIComponent(sysparmLimit));
+            }
+            if (sysparmOffset) {
+                queryParams.push('sysparm_offset=' + encodeURIComponent(sysparmOffset));
+            }
+
+            if (queryParams.length > 0) {
+                uri += '?' + queryParams.join('&');
+            }
+
+            var options = {
+                baseUrl: server.instance,
+                uri: uri,
+                body: null,
+                method: 'GET',
+                json: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            server.doRequest(options, callback);
+        };
+
+        this.on('input', function(msg) {
+            var attachmentSysId = msg.sys_id;
+            var sysparmQuery = msg.sysparm_query;
+            var sysparmLimit = msg.sysparm_limit;
+            var sysparmOffset = msg.sysparm_offset;
+
+            // Determine mode: single or query-based
+            var isSingleMode = attachmentSysId && !sysparmQuery;
+            var isQueryMode = sysparmQuery;
+
+            if (!isSingleMode && !isQueryMode) {
                 node.status({
                     fill: "red",
                     shape: "dot",
-                    text: "Invalid message: sys_id required"
+                    text: "Invalid message: sys_id or sysparm_query required"
                 });
                 return;
             }
@@ -734,7 +774,8 @@ module.exports = function(RED) {
                         shape: "dot",
                         text: "Request failed"
                     });
-                    node.error("Error getting attachment metadata: " + attachmentSysId + " (" + res.statusCode + "): " + JSON.stringify(err) + " " + JSON.stringify(body));
+                    var errorContext = isSingleMode ? attachmentSysId : sysparmQuery;
+                    node.error("Error getting attachment metadata: " + errorContext + " (" + res.statusCode + "): " + JSON.stringify(err) + " " + JSON.stringify(body));
                 }
             };
 
@@ -743,7 +784,12 @@ module.exports = function(RED) {
                 shape: "dot",
                 text: "Requesting..."
             });
-            this.prepareRequest(attachmentSysId, callback);
+
+            if (isSingleMode) {
+                this.prepareRequestSingle(attachmentSysId, callback);
+            } else {
+                this.prepareRequestQuery(sysparmQuery, sysparmLimit, sysparmOffset, callback);
+            }
         });
     }
 
@@ -812,12 +858,22 @@ module.exports = function(RED) {
         var node = this;
         var server = RED.nodes.getNode(config.server);
 
-        this.prepareRequest = function(tableName, recordSysId, filename, fileBuffer, contentType, callback) {
+        this.prepareRequest = function(tableName, recordSysId, filename, fileBuffer, contentType, encryptionContext, creationTime, callback) {
             var instanceUrl = server.instance.replace(/\/$/, '');
             var url = instanceUrl + '/api/now/attachment/file' +
                       '?table_name=' + encodeURIComponent(tableName) +
                       '&table_sys_id=' + encodeURIComponent(recordSysId) +
                       '&file_name=' + encodeURIComponent(filename);
+
+            // Add optional encryption_context parameter
+            if (encryptionContext) {
+                url += '&encryption_context=' + encodeURIComponent(encryptionContext);
+            }
+
+            // Add optional creation_time parameter
+            if (creationTime) {
+                url += '&creation_time=' + encodeURIComponent(creationTime);
+            }
 
             var options = {
                 url: url,
@@ -838,6 +894,8 @@ module.exports = function(RED) {
             var filename = msg.filename;
             var fileBuffer = msg.payload;
             var contentType = msg.contentType;
+            var encryptionContext = msg.encryption_context;
+            var creationTime = msg.creation_time;
 
             if (!tableName || !recordSysId || !filename || !fileBuffer) {
                 node.status({
@@ -887,7 +945,7 @@ module.exports = function(RED) {
                 shape: "dot",
                 text: "Uploading..."
             });
-            this.prepareRequest(tableName, recordSysId, filename, fileBuffer, contentType, callback);
+            this.prepareRequest(tableName, recordSysId, filename, fileBuffer, contentType, encryptionContext, creationTime, callback);
         });
     }
 

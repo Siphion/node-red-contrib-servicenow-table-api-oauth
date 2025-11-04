@@ -317,17 +317,43 @@
 </script>
 
 <script type="text/x-red" data-help-name="get attachment metadata">
-  <p>Retrieves metadata for a ServiceNow attachment.</p>
-  <h3>Inputs</h3>
+  <p>Retrieves metadata for ServiceNow attachments. Supports two modes:</p>
+  <h3>Mode 1: Single Attachment</h3>
+  <p>Retrieves metadata for a single attachment by sys_id.</p>
+  <h4>Inputs</h4>
   <dl class="message-properties">
     <dt>sys_id <span class="property-type">string</span></dt>
-    <dd>The sys_id of the attachment (required)</dd>
+    <dd>The sys_id of the attachment (required for single mode)</dd>
   </dl>
-  <h3>Outputs</h3>
+  <h4>Outputs</h4>
   <dl class="message-properties">
     <dt>payload <span class="property-type">object</span></dt>
-    <dd>Attachment metadata including: sys_id, file_name, size_bytes, content_type, table_name, table_sys_id, download_link</dd>
+    <dd>Single attachment metadata object</dd>
   </dl>
+  <h4>Example</h4>
+  <pre>msg.sys_id = "attachment_sys_id";</pre>
+
+  <h3>Mode 2: Query-Based (Multiple Attachments)</h3>
+  <p>Retrieves metadata for multiple attachments using a query. Useful for listing all attachments on a record.</p>
+  <h4>Inputs</h4>
+  <dl class="message-properties">
+    <dt>sysparm_query <span class="property-type">string</span></dt>
+    <dd>Encoded query to filter attachments (required for query mode). Example: "table_name=incident^table_sys_id=abc123"</dd>
+    <dt class="optional">sysparm_limit <span class="property-type">number</span></dt>
+    <dd>Maximum number of results (optional, default: 1000)</dd>
+    <dt class="optional">sysparm_offset <span class="property-type">number</span></dt>
+    <dd>Number of records to skip (optional, default: 0)</dd>
+  </dl>
+  <h4>Outputs</h4>
+  <dl class="message-properties">
+    <dt>payload <span class="property-type">array</span></dt>
+    <dd>Array of attachment metadata objects</dd>
+  </dl>
+  <h4>Example</h4>
+  <pre>// Get all attachments for a specific record
+msg.sysparm_query = "table_name=incident^table_sys_id=" + recordSysId;
+msg.sysparm_limit = 100; // optional
+msg.sysparm_offset = 0;  // optional</pre>
 </script>
 
 
@@ -430,6 +456,10 @@
     <dd>File content as Buffer (required)</dd>
     <dt class="optional">contentType <span class="property-type">string</span></dt>
     <dd>MIME type (optional, default: "application/octet-stream")</dd>
+    <dt class="optional">encryption_context <span class="property-type">string</span></dt>
+    <dd>Sys_id of an encryption context record to encrypt the file. Only users with the specified encryption context can access the attachment (optional)</dd>
+    <dt class="optional">creation_time <span class="property-type">string</span></dt>
+    <dd>Creation date and time of the attachment. Use this to capture attachment creation times when uploading from offline apps (optional, default: current date/time)</dd>
   </dl>
   <h3>Outputs</h3>
   <dl class="message-properties">
@@ -442,7 +472,9 @@ msg.topic = "incident";
 msg.sys_id = "abc123...";
 msg.filename = "screenshot.jpg";
 msg.payload = Buffer.from(...);
-msg.contentType = "image/jpeg";</pre>
+msg.contentType = "image/jpeg";
+msg.encryption_context = "encryption_sys_id"; // optional
+msg.creation_time = "2025-01-01 12:00:00"; // optional</pre>
 </script>
 
 
